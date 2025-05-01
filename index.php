@@ -1,0 +1,38 @@
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/config/database.php';
+
+$mainRouter = new AltoRouter();
+$mainRouter->setBasePath('');
+
+function render($view, $data = []) {
+    extract($data);
+    $viewFile = __DIR__ . "/views/$view.php";
+
+    if (!file_exists($viewFile)) {
+        http_response_code(500);
+        echo "View $view nicht gefunden";
+        return;
+    }
+
+    include __DIR__ . "/views/template/layout.php";
+}
+
+
+require __DIR__ . '/routes/mainRoutes.php';
+
+$requestUri = $_SERVER['REQUEST_URI'];
+
+$match = $mainRouter->match();
+
+
+if ($match && is_callable($match['target'])) {
+    call_user_func_array($match['target'], $match['params']);
+} else {
+    http_response_code(404);
+    echo "<h1>404</h1><p>Seite nicht gefunden.</p>";
+}
